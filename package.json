@@ -7,6 +7,9 @@
     "type": "commonjs",
     "main": "index.js",
     "scripts": {
+        "build:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --minify",
+        "build:ts": "esbuild ./src/main.ts --bundle --outfile=./dist/main.js --minify",
+        "build": "npm run build:css && npm run build:ts",
         "watch:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --watch --minify --map",
         "watch:ts": "esbuild ./src/main.ts --bundle --outfile=./dist/main.js --watch --minify --sourcemap",
         "dev": "concurrently \"npm run watch:css\" \"npm run watch:ts\""
