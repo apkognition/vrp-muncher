@@ -1,0 +1,23 @@
+{
+    "name": "vrpmunch",
+    "version": "1.0.0",
+    "description": "",
+    "license": "ISC",
+    "author": "",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+        "watch:css": "tailwindcss -i ./src/styles.css -o ./dist/styles.css --watch --minify --map",
+        "watch:ts": "esbuild ./src/main.ts --bundle --outfile=./dist/main.js --watch --minify --sourcemap",
+        "dev": "concurrently \"npm run watch:css\" \"npm run watch:ts\""
+    },
+    "devDependencies": {
+        "concurrently": "^9.2.1",
+        "esbuild": "^0.28.0",
+        "postcss": "^8.5.9",
+        "tailwindcss": "^4.2.2"
+    },
+    "dependencies": {
+        "@tailwindcss/cli": "^4.2.2"
+    }
+}
