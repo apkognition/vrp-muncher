@@ -1,24 +1,61 @@
-export function processInputUrl(url: string): string | null {
+import { b82, xflate } from "./b82";
+
+export const vrps_prot = "vrps://"
+
+interface Step {
+    n?: string,
+    f: (a: string) => string | Promise<string>,
+    b: (a: string) => string | Promise<string>,
+};
+
+const steps: Step[] = [
+    {
+        n: "substring",
+        f: reduceCommonSubstrings,
+        b: expandCommonSubstrings,
+    },
+    {
+        n: "xflate",
+        f: deflate,
+        b: inflate
+    },
+    {
+        f: b82.encode,
+        b: b82.decode,
+    },
+    {
+        n: "shift",
+        f: rot13,
+        b: rot13,
+    },
+];
+
+export async function processInputUrl(url: string): Promise<string | null> {
     if (!url.trim()) {
         return null;
     }
 
-    return url.startsWith("vrps://")
-        ? unmunch(url.slice(7))
-        : `vrps://${munch(url)}`;
+    return url.startsWith(vrps_prot)
+        ? await unmunch(url.slice(7))
+        : `${vrps_prot}${await munch(url)}`;
 }
 
-export const munch = (rawUrl: string): string => {
-    const rotText = rot13(rawUrl);
-    const munchedUrl = B66C.encode(new TextEncoder().encode(rotText));
-    return munchedUrl;
-}
+export const munch = async (input: string, log: boolean = true): Promise<string> => {
+    return await steps.reduce(async (accP, step) => {
+        const acc = await accP
 
-export const unmunch = (encodedUrl: string): string => {
-    const unbasedText = new TextDecoder().decode(B66C.decode(encodedUrl));
-    const unmunchedUrl = rot13(unbasedText);
-    return unmunchedUrl;
-}
+        const stepR = await step.f(acc)
+        if (log) {
+            console.debug(step.n ?? step.f.name, acc.length, "->", stepR.length);
+        }
+
+        return stepR
+    }, Promise.resolve(input));
+};
+
+export const unmunch = async (input: string): Promise<string> => {
+    return await steps.toReversed().reduce(async (acc, step) => await step.b(await acc), Promise.resolve(input));
+};
 
 function rot13(str: string): string {
     return str.replace(/[a-zA-Z]/g, (char) => {
@@ -28,67 +65,67 @@ function rot13(str: string): string {
 }
 
 export function trimVrpProtocol(str: string): string {
-    return str.startsWith("vrps://")
+    return str.startsWith(vrps_prot)
         ? str.slice(7)
         : str;
 }
 
-const codec = {
-    encode: (str: string): string => btoa(String.fromCodePoint(...new TextEncoder().encode(str))).replace(/=+$/, ''),
-    decode: (b64: string): string => new TextDecoder().decode(Uint8Array.from(atob(b64), c => c.codePointAt(0))),
-};
+async function deflate(str: string): Promise<string> {
+    const deflated = await xflate.deflate(str)
 
-class B66C {
-    static readonly alphabet: string = "Mh7_nT5pifK3~P8IYlGvwASFVy62LdjBX.oruJsRxatkDeQzcWg1bHmU0CNE9-qZO4";
-    static readonly base: bigint = 66n;
-
-    static encode(bytes: Uint8Array): string {
-        if (bytes.length === 0) return "";
-
-        let num = 0n;
-        for (const byte of bytes) {
-            num = (num << 8n) | BigInt(byte);
-        }
-
-        let result = "";
-        while (num > 0n) {
-            const remainder = num % this.base;
-            result = this.alphabet[Number(remainder)] + result;
-            num = num / this.base;
-        }
-
-        for (let i = 0; i < bytes.length && bytes[i] === 0; i++) {
-            result = this.alphabet[0] + result;
-        }
-
-        return result || this.alphabet[0];
-    }
-
-    static decode(str: string): Uint8Array {
-        if (str.length === 0) return new Uint8Array(0);
-
-        let num = 0n;
-        for (const char of str) {
-            const index = this.alphabet.indexOf(char);
-            if (index === -1) throw new Error(`Invalid character in munch: ${char}`);
-            num = (num * this.base) + BigInt(index);
-        }
-
-        let hex = num.toString(16);
-        if (hex.length % 2 !== 0) hex = "0" + hex;
-
-        const bytes: number[] = [];
-        for (let i = 0; i < hex.length; i += 2) {
-            bytes.push(parseInt(hex.substr(i, 2), 16));
-        }
-
-        let leadingZeros = 0;
-        for (let i = 0; i < str.length && str[i] === this.alphabet[0]; i++) {
-            leadingZeros++;
-        }
-
-        const finalArr = new Uint8Array(leadingZeros + bytes.length);
-        finalArr.set(bytes, leadingZeros);
-        return finalArr;
-    }
+    return deflated.length + 1 < str.length
+        ? `!${deflated}`
+        : str;
 }
+
+async function inflate(str: string): Promise<string> {
+    if (!str.startsWith('!')) {
+        return str
+    }
+
+    const inflated = await xflate.inflate(str.slice(1))
+    return inflated
+}
+
+function reduceCommonSubstrings(str: string): string {
+    return FRAGMENTS.reduce((str, fragment, i) => {
+        const byteMarker = String.fromCharCode(FRAGMENT_OFFSET + i);
+        return str.split(fragment).join(byteMarker);
+    }, str);
+}
+
+function expandCommonSubstrings(str: string): string {
+    return str.split('').map(char => {
+        const code = char.charCodeAt(0);
+        if (code >= 128 && code < 1278 + FRAGMENTS.length) {
+            return FRAGMENTS[code - FRAGMENT_OFFSET];
+        }
+        return char;
+    }).join('');
+}
+
+const FRAGMENT_OFFSET = 128;
+const FRAGMENTS = [
+    "https://discord.com/",
+    "https://github.com/",
+    "https://reddit.com/",
+    "https://gofile.io/",
+
+    "?utm_campaign=",
+    "&utm_content=",
+    "?utm_source=",
+    "?utm_medium=",
+    "https://www.",
+
+    "http://",
+
+    ".html",
+    ".json",
+    ".php",
+
+    "www.",
+    "cdn.",
+    ".com",
+    ".io",
+    ".me"
+]

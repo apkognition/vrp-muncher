@@ -1,15 +1,13 @@
 import { processInputUrl, munch, unmunch, trimVrpProtocol } from "./munch.ts"
 
-const textbox = document.getElementById("url-input") as HTMLInputElement;
+const inputBox = document.getElementById("url-input") as HTMLInputElement;
 const outputBox = document.getElementById("url-output") as HTMLInputElement;
 
 const handleError = (error: unknown) => {
     const errorContainer = document.getElementById("error-container")!;
-    const mainUI = document.getElementById("main-decoder-ui")!;
     const debugElement = document.getElementById("debug-info")!;
     const messageElement = document.getElementById("error-message")!;
 
-    mainUI.classList.add("hidden");
     errorContainer.classList.remove("hidden");
 
     if (error instanceof Error) {
@@ -41,13 +39,10 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (payload && textbox) {
         try {
-            const originalUrl = unmunch(trimVrpProtocol(payload));
+            const originalUrl = await unmunch(trimVrpProtocol(payload));
             outputBox.value = originalUrl;
 
             outputBox.parentElement!.height = 100;
-            document.getElementById("copy-embedded-button")!.hidden = true;
-
-            console.log("Extracted URL:", originalUrl);
         } catch (e) {
             console.error("Failed to decode fragment:", e);
             handleError(e)
@@ -64,15 +59,17 @@ document.getElementById("copy-button")!.onclick = async (event) => {
     navigator.clipboard.writeText(outputBoxText);
 };
 
-if (currentPage == '/') {
-    document.getElementById("munch-button")!.onclick = () => {
-        const output = processInputUrl(textbox.value);
-
-        if (!output) {
+if (currentPage === '/' || currentPage === "/index.html") {
+    inputBox.addEventListener("keydown", async (event) => {
+        if (event.key !== "Enter") {
             return;
         }
 
-        outputBox.value = output;
+        await handleMunch();
+    })
+    
+    document.getElementById("munch-button")!.onclick = async () => {
+        await handleMunch();
     };
 
     document.getElementById("copy-embedded-button")!.onclick = async () => {
@@ -85,4 +82,21 @@ if (currentPage == '/') {
 
         navigator.clipboard.writeText(`https://${window.location.hostname}/d/#${url}`);
     };
+
+    async function handleMunch() {
+        try {
+            const output = await processInputUrl(inputBox.value);
+
+            if (!output) {
+                return;
+            }
+
+            outputBox.value = output;
+        }
+        catch (e) {
+            console.error("Munch failed:", e)
+            outputBox.value = ""
+            handleError(e)
+        }
+    }
 }
