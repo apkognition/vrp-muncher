@@ -10,8 +10,8 @@
 
 <body
     class="min-h-screen m-0 bg-[#245483] bg-linear-to-b from-[#245483] to-[#060d1c] font-sans antialiased text-slate-200">
-    <div class="flex flex-col items-center justify-center min-h-screen px-4">
-        <div class="w-full max-w-2xl space-y-8">
+    <div class="w-full flex flex-col items-center justify-center min-h-screen px-4">
+        <div class="w-full max-w-7xl space-y-8">
 
             <div class="text-center space-y-2">
                 <h1 class="text-3xl font-black tracking-tighter text-white uppercase italic">VRP Unmuncher</h1>
@@ -19,14 +19,14 @@
 
             <div class="space-y-3">
                 <div
-                    class="flex items-center h-30 w-full bg-[#1a1a1a]/80 backdrop-blur-sm rounded-xl border border-white/5 p-1 shadow-2xl">
+                    class="flex items-center w-full bg-[#1a1a1a]/80 backdrop-blur-sm rounded-xl border border-white/5 p-1 shadow-2xl">
                     <input class="w-full p-3 bg-transparent border-0 text-sky-400 focus:outline-none font-mono text-sm"
                         type="text" placeholder="Unmuched result..." name="url-output-box" id="url-output" readonly>
 
                     <div class="flex items-center gap-1">
                         <button
                             class="px-6 py-2.5 rounded-lg bg-sky-600 text-white font-bold hover:bg-sky-500 active:scale-95 transition-all cursor-pointer border-t border-white/10"
-                            id="copy-embedded-button">
+                            id="copy-button">
                             COPY
                         </button>
                     </div>
@@ -37,6 +37,33 @@
             class="inline-flex items-center mt-5 gap-2 px-4 py-2 text-xs font-mono tracking-widest text-zinc-500 uppercase transition-all hover:text-sky-400 group">
             <span class="transition-transform group-hover:-translate-x-1">←</span>
             Go to Muncher
+        </a>
+    </div>
+
+    <div id="error-container" class="hidden w-full max-w-2xl space-y-4 animate-in fade-in zoom-in duration-300">
+        <div class="bg-rose-500/10 border border-rose-500/50 backdrop-blur-md rounded-xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-rose-500 rounded-lg text-white font-bold text-xs">ERR_INVALID_MUNCH</div>
+                <h2 class="text-rose-200 font-bold uppercase tracking-tight">Decompression Failed</h2>
+            </div>
+
+            <p id="error-message" class="text-rose-100/80 text-sm font-sans mb-4">
+                The provided URL hash is malformed or uses an unsupported encoding version.
+            </p>
+
+            <details class="group bg-black/20 rounded-lg border border-white/5">
+                <summary
+                    class="cursor-pointer p-3 text-[10px] font-mono text-rose-300/50 uppercase tracking-widest list-none flex justify-between items-center">
+                    Technical Stack Trace
+                    <span class="group-open:rotate-180 transition-transform">↓</span>
+                </summary>
+                <pre id="debug-info"
+                    class="p-3 text-[11px] font-mono text-rose-400/70 overflow-x-auto whitespace-pre-wrap leading-relaxed"></pre>
+            </details>
+        </div>
+
+        <a href="/" class="block text-center p-3 text-xs font-mono text-zinc-500 hover:text-sky-400 transition-colors">
+            ← Return to Muncher
         </a>
     </div>
 

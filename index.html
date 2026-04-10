@@ -52,6 +52,33 @@
         </div>
     </div>
 
+    <div id="error-container" class="hidden w-full max-w-2xl space-y-4 animate-in fade-in zoom-in duration-300">
+        <div class="bg-rose-500/10 border border-rose-500/50 backdrop-blur-md rounded-xl p-6">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-rose-500 rounded-lg text-white font-bold text-xs">ERR_INVALID_MUNCH</div>
+                <h2 class="text-rose-200 font-bold uppercase tracking-tight">Decompression Failed</h2>
+            </div>
+
+            <p id="error-message" class="text-rose-100/80 text-sm font-sans mb-4">
+                The provided URL hash is malformed or uses an unsupported encoding version.
+            </p>
+
+            <details class="group bg-black/20 rounded-lg border border-white/5">
+                <summary
+                    class="cursor-pointer p-3 text-[10px] font-mono text-rose-300/50 uppercase tracking-widest list-none flex justify-between items-center">
+                    Technical Stack Trace
+                    <span class="group-open:rotate-180 transition-transform">↓</span>
+                </summary>
+                <pre id="debug-info"
+                    class="p-3 text-[11px] font-mono text-rose-400/70 overflow-x-auto whitespace-pre-wrap leading-relaxed"></pre>
+            </details>
+        </div>
+
+        <a href="/" class="block text-center p-3 text-xs font-mono text-zinc-500 hover:text-sky-400 transition-colors">
+            ← Return to Muncher
+        </a>
+    </div>
+
     <script src="/dist/main.js"></script>
 </body>
 
